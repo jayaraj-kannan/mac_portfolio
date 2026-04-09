@@ -1,0 +1,224 @@
+:root {
+  --color-bg: #1e1e24;
+  --color-text: #ffffff;
+  --color-text-muted: rgba(255, 255, 255, 0.6);
+  --color-accent: #0A84FF; /* macOS Blue */
+  
+  --window-bg: rgba(30, 30, 35, 0.65);
+  --window-border: rgba(255, 255, 255, 0.15);
+  --window-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+  --menu-bg: rgba(30,30,30,0.5);
+  
+  --font-system: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden; 
+  font-family: var(--font-system);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.canvas-container {
+  position: fixed !important;
+  top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0;
+}
+
+.desktop-area {
+  position: relative;
+  z-index: 10;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none; /* Passes clicks */
+}
+
+/* WIDGETS LAYER */
+.widgets-layer {
+  position: absolute;
+  top: 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  z-index: 5; /* Below active windows */
+  pointer-events: auto;
+}
+
+.widgets-layer.left-panel {
+  left: 40px;
+}
+
+.widgets-layer.right-panel {
+  right: 40px;
+}
+
+.mac-widget {
+  background: var(--window-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--window-border);
+  border-radius: 20px;
+  padding: 20px;
+  width: 280px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+  transition: transform 0.2s ease;
+}
+.mac-widget:hover { transform: scale(1.02); }
+
+.widget-clock { font-size: 2.5rem; font-weight: 300; letter-spacing: -1px; text-align: center; }
+.widget-date { font-size: 0.9rem; font-weight: 500; opacity: 0.7; text-align: center; margin-top: 5px; text-transform: uppercase; }
+
+.widget-title { font-size: 0.85rem; font-weight: 600; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+
+/* Battery CSS representation */
+.battery-container { display: flex; align-items: center; gap: 10px; }
+.battery-icon {
+  width: 60px; height: 30px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-radius: 6px;
+  padding: 2px;
+  position: relative;
+}
+.battery-icon::after {
+  content: ''; position: absolute; right: -6px; top: 50%; transform: translateY(-50%);
+  width: 4px; height: 10px; background: rgba(255,255,255,0.4); border-radius: 0 2px 2px 0;
+}
+.battery-level { height: 100%; border-radius: 3px; transition: width 1s ease; }
+.battery-text { font-size: 1.5rem; font-weight: 600; }
+
+/* Menu Bar */
+.menu-bar {
+  position: absolute; top: 0; left: 0; width: 100vw; height: 28px;
+  background: var(--menu-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  display: flex; justify-content: space-between; align-items: center; padding: 0 16px;
+  font-size: 0.85rem; font-weight: 500; z-index: 1000; pointer-events: auto;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.menu-bar-left, .menu-bar-right { display: flex; align-items: center; gap: 16px; }
+.menu-item { cursor: default; transition: opacity 0.2s; }
+.menu-item.active { font-weight: 600; }
+.menu-item:hover { opacity: 0.7; }
+.hide-mobile { display: block; }
+
+/* Dock */
+.dock-container {
+  position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+  background: rgba(40, 40, 40, 0.4); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 24px;
+  display: flex; gap: 12px; z-index: 1000; pointer-events: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  transition: all 0.3s ease;
+}
+.dock-item {
+  width: 50px; height: 50px; border-radius: 12px; background: rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+  cursor: pointer; transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1); position: relative;
+}
+.dock-item:hover { transform: scale(1.3) translateY(-10px); background: rgba(255,255,255,0.2); z-index: 10; }
+.dock-dot { position: absolute; bottom: -4px; width: 4px; height: 4px; background: rgba(255,255,255,0.8); border-radius: 50%; }
+
+/* Draggable Windows */
+.mac-window {
+  position: absolute; background: var(--window-bg); border: 1px solid var(--window-border);
+  backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-radius: 12px;
+  box-shadow: var(--window-shadow); overflow: hidden; pointer-events: auto; display: flex; flex-direction: column;
+}
+.mac-content { padding: 1.5rem; overflow-y: auto; flex: 1; }
+.mac-content::-webkit-scrollbar { width: 6px; }
+.mac-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+.mac-header-drag {
+  display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--window-border); padding: 0.75rem 1rem; position: relative; cursor: grab;
+}
+.mac-header-drag:active { cursor: grabbing; }
+
+.mac-buttons { position: absolute; left: 1rem; display: flex; gap: 8px; }
+.mac-button { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.2); cursor: pointer; display: flex; justify-content: center; align-items: center; }
+.btn-red { background-color: #FF5F56; }
+.btn-yellow { background-color: #FFBD2E; }
+.btn-green { background-color: #27C93F; }
+.mac-button:hover::after { content: '✕'; font-size: 8px; color: #4c0000; font-weight: bold; }
+.btn-yellow:hover::after { content: '-'; color: #995b00; }
+.btn-green:hover::after { content: '+'; color: #004d00; }
+
+.mac-title { font-size: 0.85rem; font-weight: 600; opacity: 0.9; }
+
+/* Utilities */
+.text-primary { color: var(--color-text); }
+.text-secondary { color: var(--color-accent); }
+.text-muted { color: var(--color-text-muted); }
+.flex { display: flex; }
+.flex-col { display: flex; flex-direction: column; }
+.items-center { align-items: center; }
+.gap-2 { gap: 0.5rem; }
+.gap-4 { gap: 1rem; }
+.flex-wrap { flex-wrap: wrap; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.p-2 { padding: 0.5rem; }
+.text-xl { font-size: 1.25rem; font-weight: 600; }
+
+/* Tags/Chips */
+.chip { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.05); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 8px; margin-right: 8px; transition: background 0.2s; }
+.chip:hover { background: rgba(255, 255, 255, 0.2); }
+
+/* Grid for Projects/Tools */
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
+.item-card { border: 1px solid var(--window-border); padding: 1rem; background: rgba(255,255,255, 0.03); border-radius: 8px; transition: transform 0.2s ease, background 0.2s ease; }
+.item-card:hover { transform: translateY(-2px); background: rgba(255,255,255, 0.06); }
+.item-title { font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 10px; }
+.item-meta { font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem; }
+.social-link { transition: opacity 0.2s ease, transform 0.2s ease; color: var(--color-text); font-size: 1.5rem; text-decoration: none; }
+.social-link:hover { opacity: 0.8; transform: scale(1.1); }
+
+
+/* ===========================
+   RESPONSIVE MOBILE STYLES 
+   =========================== */
+@media (max-width: 768px) {
+  .widgets-layer.left-panel,
+  .widgets-layer.right-panel {
+    top: 20px;
+    position: relative;
+    left: 0 !important;
+    right: 0 !important;
+    margin: 0 auto 20px;
+    transform: none !important;
+    width: 90%;
+    max-width: 350px;
+    padding-bottom: 0;
+  }
+  
+  .widgets-layer.right-panel {
+    padding-bottom: 15vh; /* Keep it away from dock */
+  }
+  
+  .hide-mobile { display: none; }
+  
+  .dock-container {
+    width: 90vw;
+    overflow-x: auto;
+    padding: 6px 10px;
+    gap: 8px;
+    border-radius: 16px;
+  }
+  
+  .dock-item { width: 40px; height: 40px; font-size: 1.4rem; }
+  
+  /* Reset hover scale to prevent mobile tap glitches */
+  .dock-item:hover { transform: none; }
+
+  /* Full screen locked window style applies via React props inline styling, but we ensure content flows correctly */
+  .mac-content { padding: 1rem; }
+  .grid-2 { grid-template-columns: 1fr; }
+  
+  .mac-header-drag { cursor: default; } /* No grab icon on mobile */
+  .mac-header-drag:active { cursor: default; }
+}
